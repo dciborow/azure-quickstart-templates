@@ -43,7 +43,7 @@ call("cp bosh.key ./bosh/bosh", shell=True)
 with open ('bosh_cert.pem', 'r') as tmpfile:
     ssh_cert = tmpfile.read()
 ssh_cert = "|\n" + ssh_cert
-ssh_cert="\n        ".join([line for line in ssh_cert.split('\n')])
+ssh_cert = "\n        ".join(list(ssh_cert.split('\n')))
 
 # Render the yml template for bosh-init
 bosh_template = 'bosh.yml'
@@ -78,8 +78,13 @@ if enable_dns:
         call("cp -f 98-msft-love-cf /etc/update-motd.d/", shell=True)
         call("chmod 755 /etc/update-motd.d/98-msft-love-cf", shell=True)
     except Exception as e:
-        err_msg = "\nWarning:\n"
-        err_msg += "\nFailed to setup DNS with error: {0}, {1}".format(e, traceback.format_exc())
+        err_msg = (
+            "\nWarning:\n"
+            + "\nFailed to setup DNS with error: {0}, {1}".format(
+                e, traceback.format_exc()
+            )
+        )
+
         err_msg += "\nYou can setup DNS manually with \"python setup_dns.py -d cf.azurelovecf.com -i 10.0.16.4 -e External_IP_of_CloudFoundry -n External_IP_of_Devbox\""
         err_msg += "\nExternal_IP_of_CloudFoundry can be found in {0}/settings.".format(home_dir)
         err_msg += "\nExternal_IP_of_Devbox is the dynamic IP which can be found in Azure Portal."

@@ -31,22 +31,20 @@ def getDataDiskCount():
     log(toconnect)
     client.connect(toconnect, username=cmx.ssh_root_user, password=cmx.ssh_root_password)
     stdin, stdout, stderr = client.exec_command(bashCommand)
-    count=stdout.readline().rstrip('\n')
-
-    return count
+    return stdout.readline().rstrip('\n')
 
 def setZookeeperOwnerDir(HA):
-    os.system("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
+    os.system(f"sudo chown zookeeper:zookeeper {LOG_DIR}/zookeeper")
     # setup other masters in HA environment
     if HA:
         client=SSHClient()
         client.set_missing_host_key_policy(paramiko.client.AutoAddPolicy())
         toconnect=socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn1")
         client.connect(toconnect, username=cmx.ssh_root_user, password=cmx.ssh_root_password)
-        client.exec_command("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
+        client.exec_command(f"sudo chown zookeeper:zookeeper {LOG_DIR}/zookeeper")
         toconnect=socket.getfqdn(cmx.cm_server).replace("-mn0", "-mn2")
         client.connect(toconnect, username=cmx.ssh_root_user, password=cmx.ssh_root_password)
-        client.exec_command("sudo chown zookeeper:zookeeper "+LOG_DIR+"/zookeeper")
+        client.exec_command(f"sudo chown zookeeper:zookeeper {LOG_DIR}/zookeeper")
 
 
 
@@ -1086,7 +1084,7 @@ def setup_sentry():
         hive.update_config(cdh.dependencies_for(hive))
 
         # Disable HiveServer2 Impersonation - hive-HIVESERVER2-BASE - Default Group
-        role_group = hive.get_role_config_group("%s-HIVESERVER2-BASE" % hive.name)
+        role_group = hive.get_role_config_group(f"{hive.name}-HIVESERVER2-BASE")
         role_group.update_config({"hiveserver2_enable_impersonation": False})
 
         # This service is started later on
@@ -1227,7 +1225,9 @@ class ManagementActions:
         for mgmt_role in [x for x in self._role_list if x in self._role_types]:
             for role in [x for x in self._service.get_roles_by_type(mgmt_role) if x.roleState in state[action]]:
                 for cmd in getattr(self._service, action)(role.name):
-                    check.status_for_command("%s role %s" % (action.split("_")[0].upper(), mgmt_role), cmd)
+                    check.status_for_command(
+                        f'{action.split("_")[0].upper()} role {mgmt_role}', cmd
+                    )
 
     def setup(self):
         """
@@ -1464,8 +1464,10 @@ class ServiceActions:
         state = {'start': ['STOPPED'], 'stop': ['STARTED'], 'restart': ['STARTED', 'STOPPED']}
         for services in [x for x in self._cluster.get_all_services()
                          if x.type in self._service_list and x.serviceState in state[action]]:
-            check.status_for_command("%s service %s" % (action.upper(), services.type),
-                                     getattr(self._cluster.get_service(services.name), action)())
+            check.status_for_command(
+                f"{action.upper()} service {services.type}",
+                getattr(self._cluster.get_service(services.name), action)(),
+            )
 
     @classmethod
     def get_service_type(cls, name):
@@ -1556,11 +1558,9 @@ class ServiceActions:
                         "impala_service": "IMPALA", "oozie_service": "OOZIE",
                         "mapreduce_yarn_service": ['MAPREDUCE', 'YARN'], "yarn_service": "YARN"}
 
-        dependency_list = []
-        # get required service config
-        for k, v in service.get_config(view="full")[0].items():
-            if v.required:
-                dependency_list.append(k)
+        dependency_list = [
+            k for k, v in service.get_config(view="full")[0].items() if v.required
+        ]
 
         # Extended dependence list, adding the optional ones as well
         if service.type == 'HUE':
@@ -1580,7 +1580,11 @@ class ServiceActions:
 #            dependency_list.append('solr_service')
 
         for key in dependency_list:
-            if key == "hue_webhdfs":
+            if key == "hue_hbase_thrift":
+                hbase = cdh.get_service_type('HBASE')
+                if hbase is not None:
+                    service_config[key] = [x.name for x in hbase.get_roles_by_type(config_types[key])][0]
+            elif key == "hue_webhdfs":
                 hdfs = cdh.get_service_type('HDFS')
                 if hdfs is not None:
                     service_config[key] = [x.name for x in hdfs.get_roles_by_type('NAMENODE')][0]
@@ -1594,13 +1598,8 @@ class ServiceActions:
                     # prefer YARN over MAPREDUCE
                     if cdh.get_service_type(_type) is not None and _type == 'YARN':
                         service_config[key] = cdh.get_service_type(_type).name
-            elif key == "hue_hbase_thrift":
-                hbase = cdh.get_service_type('HBASE')
-                if hbase is not None:
-                    service_config[key] = [x.name for x in hbase.get_roles_by_type(config_types[key])][0]
-            else:
-                if cdh.get_service_type(config_types[key]) is not None:
-                    service_config[key] = cdh.get_service_type(config_types[key]).name
+            elif cdh.get_service_type(config_types[key]) is not None:
+                service_config[key] = cdh.get_service_type(config_types[key]).name
 
         return service_config
 
