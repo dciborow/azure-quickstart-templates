@@ -10,7 +10,7 @@ name: Auto Fix Sample
 on:
   pull_request:
     paths:
-      - **.bicep
+      - '**.bicep'
 
 jobs:
   main:
