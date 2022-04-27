@@ -8,7 +8,7 @@ name: Auto Fix Sample
 # Actions documentation: https://docs.github.com/en/actions/reference
 
 on:
-  pull_request:
+  push:
     paths:
       - '**.bicep'
 
