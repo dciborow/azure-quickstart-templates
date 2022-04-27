@@ -61,8 +61,8 @@ jobs:
           # Specify the script here
           inlineScript: |
             if [ -f $MAINBICEP_PATH ]; then          
-              echo Running: bicep build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
-              az bicep build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
+              echo Running: az bicep build --file $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
+              az bicep build --file $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
             fi
           
 
