@@ -61,12 +61,6 @@ jobs:
           # Install PowerShell
           sudo apt-get install -y powershell
 
-      - name: Sync master
-        uses: actions/checkout@v2.3.4
-        with:
-          ref: master
-          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
-
       - uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
@@ -127,5 +121,5 @@ jobs:
 
           if ! git diff-index --quiet HEAD --; then
             git commit -m "Automatic fixes"
-            git push
+            git push origin ${GITHUB_REF##*/}
           fi
