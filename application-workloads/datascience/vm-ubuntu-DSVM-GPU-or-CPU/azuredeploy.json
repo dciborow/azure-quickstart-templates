@@ -4,11 +4,17 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.1318.3566",
-      "templateHash": "17013571626874433164"
+      "version": "0.5.6.12127",
+      "templateHash": "12952531813766572844"
     }
   },
   "parameters": {
+    "testParam": {
+      "type": "string",
+      "metadata": {
+        "description": "Username for Administrator Account"
+      }
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
