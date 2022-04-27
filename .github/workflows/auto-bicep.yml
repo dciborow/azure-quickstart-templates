@@ -2,12 +2,10 @@ name: Auto Build Bicep
 
 on:
   push:
-    paths:                     # An ARM template will be built if on a push and commited when:
-      - '**.bicep'             # 1. Includes a .bicep file, 
-      - '!**/azuredeploy.json' # 2. Does not include a azuredeploy.json
     branches-ignore:
-      - master                 # This will never trigger on the default branch.
-  workflow_dispatch:           # To disable this auto, remove the push section.
+      - master
+    paths:
+      - '**.bicep'
 
 jobs:
   main:
@@ -18,58 +16,65 @@ jobs:
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
 
+      - name: Find sample folder
+        run: |
+          git status
+          # Get path of last file checked in
+          pwd
+          cd $GITHUB_WORKSPACE
+          pwd
+          LAST_PATH=$( git log --pretty="" --name-only -n 100 origin/master... -- | fgrep -v ".github" | head -1 )
+          echo Last file modified: $LAST_PATH
+
+          # Look for the main template file in this file's path or parents
+          SAMPLEFOLDER_PATH=$( dirname "$LAST_PATH" )
+          echo Last folder modified: $SAMPLEFOLDER_PATH
+
+          TESTFOLDER_PATH=$SAMPLEFOLDER_PATH
+          FOUNDFOLDER_PATH=
+          while [ "$TESTFOLDER_PATH" != "." ]
+          do
+            echo "Looking for main template in $TESTFOLDER_PATH"
+            MAINBICEP_PATH=$TESTFOLDER_PATH/main.bicep
+            AZDEPLOYJSON_PATH=$TESTFOLDER_PATH/azuredeploy.json
+            if [ -f "$MAINBICEP_PATH" ] || [ -f "$AZDEPLOYJSON_PATH" ]; then
+              FOUNDFOLDER_PATH=$TESTFOLDER_PATH
+              echo Found main template in $FOUNDFOLDER_PATH
+              break
+            fi
+
+            TESTFOLDER_PATH=$( dirname "$TESTFOLDER_PATH" )
+          done
+
+          if [ ! $FOUNDFOLDER_PATH ]; then
+              echo "Could not find main.bicep or azdeploy.json in folder or parents of $SAMPLEFOLDER_PATH" 1>&2
+              exit 1
+          fi
+
+          echo "SAMPLEFOLDER_PATH=$FOUNDFOLDER_PATH" >> $GITHUB_ENV
+          echo "MAINBICEP_PATH=$MAINBICEP_PATH" >> $GITHUB_ENV
+          echo "AZDEPLOYJSON_PATH=$AZDEPLOYJSON_PATH" >> $GITHUB_ENV
+
       - name: Build main.bicep -> azuredeploy.json
         uses: Azure/cli@v1
         with:
+          # Specify the script here
           inlineScript: |
-            git status
-
-            cd $GITHUB_WORKSPACE
-            LAST_PATH=$( git log --pretty="" --name-only -n 100 origin/master... -- | fgrep -v ".github" | head -1 )
-            echo Get path of last file checked in
-            echo Last file modified: $LAST_PATH
-
-            FOLDER_PATH=$( dirname "$LAST_PATH" )
-            echo Look for the main template file in this file's path or parents
-            echo Last folder modified: $FOLDER_PATH
-
-            TESTFOLDER_PATH=$FOLDER_PATH
-            FOUNDFOLDER_PATH=
-            while [ "$TESTFOLDER_PATH" != "." ]
-            do
-              echo "Looking for main template in $TESTFOLDER_PATH"
-              MAINBICEP_PATH=$TESTFOLDER_PATH/main.bicep
-              AZDEPLOYJSON_PATH=$TESTFOLDER_PATH/azuredeploy.json
-              if [ -f "$MAINBICEP_PATH" ] || [ -f "$AZDEPLOYJSON_PATH" ]; then
-                FOUNDFOLDER_PATH=$TESTFOLDER_PATH
-                echo Found main template in $FOUNDFOLDER_PATH
-                break
-              fi
-
-              TESTFOLDER_PATH=$( dirname "$TESTFOLDER_PATH" )
-            done
-
-            if [ ! $FOUNDFOLDER_PATH ]; then
-                echo "Could not find main.bicep or azdeploy.json in folder or parents of $FOLDER_PATH" 1>&2
-                exit 1
-            fi
-            
-            echo "FOLDER_PATH=$FOUNDFOLDER_PATH" >> $GITHUB_ENV
-            echo "MAINBICEP_PATH=$MAINBICEP_PATH" >> $GITHUB_ENV
-            echo "AZDEPLOYJSON_PATH=$AZDEPLOYJSON_PATH" >> $GITHUB_ENV
-
             if [ -f $MAINBICEP_PATH ]; then          
               echo Running: az bicep build --file $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
               az bicep build --file $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
             fi
-        
-            echo Commit Changes
-            git config --global user.email "azure-quickstart-templates@noreply.github.com"
-            git config --global user.name "azure-quickstart-templates Automation"
+          
 
-            git add .
+      - name: Commit changes
+        if: always()
+        run: |
+          git config --global user.email "azure-quickstart-templates@noreply.github.com"
+          git config --global user.name "azure-quickstart-templates Automation"
 
-            if ! git diff-index --quiet HEAD --; then
-              git commit -m "Automatic fixes"
-              git push origin ${GITHUB_REF##*/}
-            fi
+          git add $SAMPLEFOLDER_PATH
+
+          if ! git diff-index --quiet HEAD --; then
+            git commit -m "Automatic fixes"
+            git push origin ${GITHUB_REF##*/}
+          fi
