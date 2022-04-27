@@ -1,66 +1,17 @@
-name: Auto Fix Sample
-# This action can be run on-demand against a branch.
-# It attempts to auto-fix some errors in the most recently updated sample in the branch:
-#    Builds main.bicep -> azuredeploy.json
-#    Attempts some fixes with the metadata
-
-# To run/debug locally, try https://github.com/nektos/act
-# Actions documentation: https://docs.github.com/en/actions/reference
+name: Auto Build Bicep
 
 on:
   push:
+    branches-ignore:
+      - master
     paths:
       - '**.bicep'
 
 jobs:
   main:
-    name: Auto Fix Sample
+    name: Auto Build Bicep
     runs-on: ubuntu-latest
-
-    env:
-      # don't print dotnet logo
-      DOTNET_NOLOGO: true
-
-      # disable telemetry (reduces dotnet tool output in logs)
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
-
     steps:
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1.8.0
-
-      - name: Install Bicep
-        run: |
-          # See https://github.com/Azure/bicep/blob/main/docs/installing.md#windows-installer
-
-          # Create the install folder
-          INSTALL_PATH="$RUNNER_TEMP/bicep"
-          BICEP_PATH="$RUNNER_TEMP/bicep/bicep"
-          mkdir -p $INSTALL_PATH
- 
-          # Fetch the latest Bicep CLI binary
-          curl -sLo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
-          chmod +x ./bicep
-          sudo mv ./bicep $INSTALL_PATH
-          echo Using bicep at $BICEP_PATH:
-          $BICEP_PATH --version
-
-          echo "BICEP_PATH=$BICEP_PATH" >> $GITHUB_ENV
-
-      - name: Install PowerShell
-        run: |
-          # Update the list of packages
-          sudo apt-get update
-          # Install pre-requisite packages.
-          sudo apt-get install -y wget apt-transport-https software-properties-common
-          # Download the Microsoft repository GPG keys
-          wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-          # Register the Microsoft repository GPG keys
-          sudo dpkg -i packages-microsoft-prod.deb
-          # Update the list of packages after we added packages.microsoft.com
-          sudo apt-get update
-          # Install PowerShell
-          sudo apt-get install -y powershell
-
       - uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
@@ -105,11 +56,15 @@ jobs:
           echo "AZDEPLOYJSON_PATH=$AZDEPLOYJSON_PATH" >> $GITHUB_ENV
 
       - name: Build main.bicep -> azuredeploy.json
-        run: |
-          if [ -f $MAINBICEP_PATH ]; then          
-            echo Running: bicep build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
-            $BICEP_PATH build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
-          fi
+        uses: Azure/cli@v1
+        with:
+          # Specify the script here
+          inlineScript: |
+            if [ -f $MAINBICEP_PATH ]; then          
+              echo Running: bicep build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
+              az bicep build $MAINBICEP_PATH --outfile $AZDEPLOYJSON_PATH
+            fi
+          
 
       - name: Commit changes
         if: always()
