@@ -1,8 +1,8 @@
 name: Auto Build Bicep
 
 on:
-  pull_request:
-    branches:
+  push:
+    branches-ignore:
       - master
     paths:
       - '**.bicep'
