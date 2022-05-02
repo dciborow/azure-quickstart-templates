@@ -2,9 +2,10 @@ name: Auto Build Bicep
 
 on:
   push:
-    branches-ignore:
+    branches:
       - master
     paths:
+      - '!tests/**'
       - '**.bicep'
       - '!**azuredeploy.json'
 
