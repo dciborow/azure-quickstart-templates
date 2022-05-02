@@ -71,8 +71,8 @@ jobs:
       - name: Commit changes
         if: always()
         run: |
-          git config --global user.email "azure-quickstart-templates@noreply.github.com"
-          git config --global user.name "azure-quickstart-templates Automation"
+          git config --global user.email "azure-bicep-buider@noreply.github.com"
+          git config --global user.name "azure-bicep-buider"
 
           git add $SAMPLEFOLDER_PATH
 
