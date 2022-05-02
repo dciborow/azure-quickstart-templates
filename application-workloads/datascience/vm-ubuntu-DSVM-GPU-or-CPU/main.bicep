@@ -1,4 +1,7 @@
 @description('Username for Administrator Account')
+param testParam1 string
+
+@description('Username for Administrator Account')
 param testParam2 string
 
 @description('Username for Administrator Account')
