@@ -2,6 +2,9 @@
 param testParam3 string
 
 @description('Username for Administrator Account')
+param testParam4 string
+
+@description('Username for Administrator Account')
 param adminUsername string
 
 @description('The name of you Virtual Machine.')
