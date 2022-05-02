@@ -77,6 +77,6 @@ jobs:
           git add $SAMPLEFOLDER_PATH
 
           if ! git diff-index --quiet HEAD --; then
-            git commit -m "Automatic fixes"
+            git commit -m "Build ARM Template"
             git push origin ${GITHUB_REF##*/}
           fi
