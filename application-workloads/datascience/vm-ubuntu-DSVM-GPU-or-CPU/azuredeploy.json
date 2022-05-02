@@ -5,16 +5,10 @@
     "_generator": {
       "name": "bicep",
       "version": "0.5.6.12127",
-      "templateHash": "9236351811170727968"
+      "templateHash": "11481683730917471190"
     }
   },
   "parameters": {
-    "testParam3": {
-      "type": "string",
-      "metadata": {
-        "description": "Username for Administrator Account"
-      }
-    },
     "testParam4": {
       "type": "string",
       "metadata": {
