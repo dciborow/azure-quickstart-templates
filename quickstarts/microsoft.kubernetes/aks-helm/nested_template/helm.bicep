@@ -9,7 +9,8 @@ param _artifactsLocation string = deployment().properties.templateLink.uri
 param _artifactsLocationSasToken string = ''
 param utcValue string = utcNow()
 
-var installScriptUri = uri(_artifactsLocation, 'scripts/helm.sh${_artifactsLocationSasToken}')
+@description('Custom Script to execute')
+param installScriptUri string = uri(_artifactsLocation, 'scripts/helm.sh${_artifactsLocationSasToken}')
 
 resource helm 'Microsoft.Resources/deploymentScripts@2019-10-01-preview' = {
   name: 'helm'
