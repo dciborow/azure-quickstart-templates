@@ -34,7 +34,7 @@ param _artifactsLocation string = deployment().properties.templateLink.uri
 param _artifactsLocationSasToken string = ''
 
 module helm 'nested_template/deploymentScripts.bicep' = {
-  name: 'Helm Scripts'
+  name: 'Container Deployment'
   params: {
     location: location
     installScriptUri: uri(_artifactsLocation, 'scripts/container_deploy.sh${_artifactsLocationSasToken}')
