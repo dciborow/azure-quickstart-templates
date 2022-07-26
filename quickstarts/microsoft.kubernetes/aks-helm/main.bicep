@@ -33,6 +33,14 @@ param _artifactsLocation string = deployment().properties.templateLink.uri
 @secure()
 param _artifactsLocationSasToken string = ''
 
+module helm 'nested_template/deploymentScripts.bicep' = {
+  name: 'Helm Scripts'
+  params: {
+    location: location
+    installScriptUri: uri(_artifactsLocation, 'scripts/container_deploy.sh${_artifactsLocationSasToken}')
+  }
+}
+
 module aks '../aks/main.bicep' = {
   name: clusterName
   params: {
@@ -47,12 +55,11 @@ module aks '../aks/main.bicep' = {
   }
 }
 
-module helm 'nested_template/helm.bicep' = {
+module helm 'nested_template/deploymentScripts.bicep' = {
   name: 'Helm Scripts'
   params: {
     location: location
-    _artifactsLocation: _artifactsLocation
-    _artifactsLocationSasToken: _artifactsLocationSasToken
+    installScriptUri: uri(_artifactsLocation, 'scripts/helm.sh${_artifactsLocationSasToken}')
   }
 }
 
