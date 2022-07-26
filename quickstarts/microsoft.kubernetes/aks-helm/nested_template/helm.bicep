@@ -1,16 +1,11 @@
 @description('Location of all resources to be deployed')
 param location string = resourceGroup().location
 
-@description('The base URI where artifacts required by this template are located')
-param _artifactsLocation string = deployment().properties.templateLink.uri
-
-@description('The sasToken required to access artifacts')
-@secure()
-param _artifactsLocationSasToken string = ''
-param utcValue string = utcNow()
-
 @description('Custom Script to execute')
-param installScriptUri string = uri(_artifactsLocation, 'scripts/helm.sh${_artifactsLocationSasToken}')
+param installScriptUri string
+
+@description('Random Value for Caching')
+param utcValue string = utcNow()
 
 resource helm 'Microsoft.Resources/deploymentScripts@2019-10-01-preview' = {
   name: 'helm'
