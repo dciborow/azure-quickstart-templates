@@ -1,5 +1,28 @@
 # Change log for Azure template SharePoint-ADFS
 
+## Enhancements & bug-fixes - Published in September 29, 2022
+
+* Add an option to create a SharePoint Subscription farm running with feature update 22H2.
+* Use a gen2 image for SQL Server VM.
+* Enable LDAPS (LDAP over SSL) on the Active Directory domain.
+* Create a new AD user to run the directory synchronization, and grant it permission "Replicate Directory Changes".
+* Create a synchronization connection in the User Profile Service.
+* Change SKU of Public IP addresses to Standard, since Basic SKU will be retired
+* Update apiVersion of ARM resources.
+* Replace DSC module xWebAdministration 3.3.0 with WebAdministrationDsc 4.0.0.
+
+## Enhancements & bug-fixes - Published in August 8, 2022
+
+* In SP SE, import site certificate in SharePoint, so it can manage the certificate itself.
+* Update LDAP security settings to mitigate CVE-2017-8563.
+* Remove tags on resources, as they did not bring any particular value.
+* Update network address to use the same as DevTest Labs templates.
+* Update apiVersion of resources to latest version.
+* Explicitly set the version of each DSC module used.
+* Update DSC modules used to latest version available.
+* Replace all resources xScript with Script and remove dependency on module xPSDesiredStateConfiguration.
+* Revert the workaround related to decryption issue in DSC as regression was fixed in Windows.
+
 ## Enhancements & bug-fixes - Published in June 24, 2022
 
 * Fix the credentials decryption issue in DSC extension when using latest version of Windows Server images.
